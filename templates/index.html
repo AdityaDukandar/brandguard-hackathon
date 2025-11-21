@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BrandGuard – Fake App Scanner</title>
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                500: '#6366f1',
+                600: '#4f46e5',
+                700: '#4338ca',
+              },
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center px-4 py-8">
+    <div class="w-full max-w-3xl">
+      <div class="mb-8 text-center">
+        <h1 class="text-3xl md:text-4xl font-semibold tracking-tight mb-2">
+          BrandGuard <span class="text-brand-500">Fake App Scanner</span>
+        </h1>
+        <p class="text-slate-400 max-w-xl mx-auto text-sm md:text-base">
+          Upload an Android APK, provide the official app details, and get a quick
+          fake-risk assessment based on name and icon similarity.
+        </p>
+      </div>
+
+      <div class="bg-slate-900/70 border border-slate-800 rounded-2xl shadow-xl p-6 md:p-8 backdrop-blur">
+        <form id="scanForm" class="space-y-6">
+          <!-- APK upload -->
+          <div>
+            <label class="block text-sm font-medium text-slate-200 mb-2" for="apkFile">
+              APK File
+            </label>
+            <div
+              class="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-slate-700 rounded-xl px-4 py-6 bg-slate-900/60 hover:border-brand-500 transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                class="w-10 h-10 text-slate-500"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M3 15.75V4.5A1.5 1.5 0 0 1 4.5 3h9.879a1.5 1.5 0 0 1 1.06.44l4.121 4.12a1.5 1.5 0 0 1 .44 1.06V15.75A2.25 2.25 0 0 1 17.75 18H6.75A3.75 3.75 0 0 1 3 14.25Z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M11.25 11.25v6m0 0-2.25-2.25M11.25 17.25l2.25-2.25"
+                />
+              </svg>
+              <div class="text-center">
+                <p class="text-sm font-medium text-slate-200">
+                  Drop your APK here or
+                  <span class="text-brand-400">browse</span>
+                </p>
+                <p class="text-xs text-slate-500 mt-1">.apk files only</p>
+              </div>
+              <input
+                id="apkFile"
+                name="apk_file"
+                type="file"
+                accept=".apk,application/vnd.android.package-archive"
+                class="block w-full text-sm text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-brand-600 file:text-white hover:file:bg-brand-700 cursor-pointer"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- Text inputs -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="officialBrand" class="block text-sm font-medium text-slate-200 mb-1">
+                Official Brand Name
+              </label>
+              <input
+                type="text"
+                id="officialBrand"
+                name="officialBrand"
+                placeholder="e.g. WhatsApp Messenger"
+                class="w-full rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              />
+            </div>
+            <div>
+              <label for="officialPackage" class="block text-sm font-medium text-slate-200 mb-1">
+                Official Package Name
+              </label>
+              <input
+                type="text"
+                id="officialPackage"
+                name="officialPackage"
+                placeholder="e.g. com.whatsapp"
+                class="w-full rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              />
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center justify-between gap-4 pt-2">
+            <p id="status" class="text-xs text-slate-500"></p>
+            <button
+              type="submit"
+              id="scanButton"
+              class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-medium text-white shadow-md hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <span>Scan</span>
+              <svg
+                id="spinner"
+                class="hidden w-4 h-4 animate-spin text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                ></path>
+              </svg>
+            </button>
+          </div>
+        </form>
+
+        <!-- Results section -->
+        <section id="resultsSection" class="mt-8 hidden">
+          <div class="border-t border-slate-800 pt-6 mt-4 grid grid-cols-1 md:grid-cols-[1.5fr,minmax(0,1fr)] gap-6">
+            <!-- Score & report -->
+            <div>
+              <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wide mb-3">
+                Scan Results
+              </h2>
+              <div class="flex items-baseline gap-3 mb-4">
+                <p class="text-4xl font-semibold" id="fakeScoreValue">0</p>
+                <span class="text-sm text-slate-400">Fake Score / 100</span>
+              </div>
+              <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden mb-4">
+                <div
+                  id="fakeScoreBar"
+                  class="h-2.5 rounded-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500"
+                  style="width: 0%"
+                ></div>
+              </div>
+              <div class="space-y-2 text-sm text-slate-300" id="riskReport">
+                <!-- Filled dynamically -->
+              </div>
+            </div>
+
+            <!-- App icon & metadata -->
+            <div class="md:pl-4 border-t md:border-t-0 md:border-l border-slate-800 pt-4 md:pt-0">
+              <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wide mb-3">
+                App Snapshot
+              </h3>
+              <div class="flex items-center gap-4 mb-4">
+                <div
+                  class="w-16 h-16 rounded-xl bg-slate-800 flex items-center justify-center overflow-hidden"
+                >
+                  <img
+                    id="appIcon"
+                    alt="App icon preview"
+                    class="w-full h-full object-cover hidden"
+                  />
+                  <span id="noIcon" class="text-xs text-slate-500">No icon</span>
+                </div>
+                <div class="text-xs text-slate-400 space-y-1" id="appMeta">
+                  <!-- Filled dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById('scanForm');
+      const statusEl = document.getElementById('status');
+      const scanButton = document.getElementById('scanButton');
+      const spinner = document.getElementById('spinner');
+      const resultsSection = document.getElementById('resultsSection');
+      const fakeScoreValue = document.getElementById('fakeScoreValue');
+      const fakeScoreBar = document.getElementById('fakeScoreBar');
+      const riskReport = document.getElementById('riskReport');
+      const appIcon = document.getElementById('appIcon');
+      const noIcon = document.getElementById('noIcon');
+      const appMeta = document.getElementById('appMeta');
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const fileInput = document.getElementById('apkFile');
+        const officialBrand = document.getElementById('officialBrand').value.trim();
+        const officialPackage = document.getElementById('officialPackage').value.trim();
+
+        if (!fileInput.files || fileInput.files.length === 0) {
+          statusEl.textContent = 'Please select an APK file to scan.';
+          statusEl.className = 'text-xs text-rose-400';
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('apk_file', fileInput.files[0]);
+
+        // real_name is consumed by the FastAPI endpoint; official package name is
+        // sent purely for reporting / future use.
+        const query = new URLSearchParams();
+        if (officialBrand) {
+          query.set('real_name', officialBrand);
+        }
+        if (officialPackage) {
+          query.set('official_package_name', officialPackage);
+        }
+
+        const url = '/analyze-apk' + (query.toString() ? `?${query.toString()}` : '');
+
+        statusEl.textContent = 'Scanning APK… this may take a few seconds.';
+        statusEl.className = 'text-xs text-slate-400';
+        scanButton.disabled = true;
+        spinner.classList.remove('hidden');
+
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || `Request failed with status ${response.status}`);
+          }
+
+          const data = await response.json();
+          updateResults(data, { officialBrand, officialPackage });
+
+          statusEl.textContent = 'Scan complete.';
+          statusEl.className = 'text-xs text-emerald-400';
+        } catch (error) {
+          console.error(error);
+          statusEl.textContent = 'Scan failed: ' + (error?.message || 'Unknown error');
+          statusEl.className = 'text-xs text-rose-400';
+        } finally {
+          scanButton.disabled = false;
+          spinner.classList.add('hidden');
+        }
+      });
+
+      function updateResults(payload, context) {
+        if (!payload || typeof payload !== 'object') return;
+
+        const { metadata = {}, risks = {}, fake_score = 0 } = payload;
+        const { officialBrand, officialPackage } = context || {};
+
+        // Fake score display
+        const scoreNum = Number.isFinite(fake_score) ? fake_score : 0;
+        const clampedScore = Math.max(0, Math.min(100, scoreNum));
+        fakeScoreValue.textContent = clampedScore.toFixed(1);
+        fakeScoreBar.style.width = `${clampedScore}%`;
+
+        // Risk report
+        const textRisk = Number.isFinite(risks.text_risk) ? risks.text_risk : 0;
+        const iconRisk = Number.isFinite(risks.icon_risk) ? risks.icon_risk : 0;
+
+        const lines = [];
+        lines.push(
+          `<p>Text similarity risk: <span class="font-semibold">${textRisk.toFixed(
+            1,
+          )}/100</span></p>`,
+        );
+        lines.push(
+          `<p>Icon similarity risk: <span class="font-semibold">${iconRisk.toFixed(
+            1,
+          )}/100</span></p>`,
+        );
+        lines.push(
+          `<p class="text-slate-400 text-xs mt-2">Fake Score is a simple average of the above risk signals.</p>`,
+        );
+        riskReport.innerHTML = lines.join('');
+
+        // Icon handling
+        if (metadata.icon_data_base64) {
+          appIcon.src = `data:image/png;base64,${metadata.icon_data_base64}`;
+          appIcon.classList.remove('hidden');
+          noIcon.classList.add('hidden');
+        } else {
+          appIcon.src = '';
+          appIcon.classList.add('hidden');
+          noIcon.classList.remove('hidden');
+        }
+
+        // Metadata snapshot
+        const pieces = [];
+        const appName = metadata.app_name || 'Unknown';
+        const pkgName = metadata.package_name || 'Unknown';
+
+        pieces.push(
+          `<p><span class="text-slate-500">Detected name:</span> <span class="text-slate-100 font-medium">${escapeHtml(
+            appName,
+          )}</span></p>`,
+        );
+        pieces.push(
+          `<p><span class="text-slate-500">Detected package:</span> <span class="text-slate-100 font-medium">${escapeHtml(
+            pkgName,
+          )}</span></p>`,
+        );
+
+        if (officialBrand) {
+          pieces.push(
+            `<p><span class="text-slate-500">Official brand:</span> <span class="text-slate-100">${escapeHtml(
+              officialBrand,
+            )}</span></p>`,
+          );
+        }
+        if (officialPackage) {
+          pieces.push(
+            `<p><span class="text-slate-500">Official package:</span> <span class="text-slate-100">${escapeHtml(
+              officialPackage,
+            )}</span></p>`,
+          );
+        }
+
+        appMeta.innerHTML = pieces.join('');
+
+        resultsSection.classList.remove('hidden');
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+    </script>
+  </body>
+</html>
