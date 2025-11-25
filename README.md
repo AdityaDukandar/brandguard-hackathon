@@ -22,7 +22,6 @@ BrandGuard is an **AI-powered automated defense system** that:
 [Link to Demo Video - TBD]
 
 ## 📸 Screenshots
-*(Add a screenshot of your UI here later)*
 
 ---
 
